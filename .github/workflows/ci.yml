@@ -63,11 +63,32 @@ jobs:
       - name: FASE 1 - Pruebas TDD (JUnit 5 + Mockito)
         run: ./mvnw test -Dtest=ReservationServiceTest
 
-      # ── 5. FASE 2 — BDD ───────────────────────────────────
+      # ── 5. Levantar API en background ─────────────────────
+      - name: Levantar API Spring Boot
+        run: ./mvnw spring-boot:run &
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/bookingya
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
+
+      # ── 6. Esperar a que la API esté lista ────────────────
+      - name: Esperar API lista
+        run: |
+          echo "Esperando que la API levante..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/api/room > /dev/null; then
+              echo "API lista!"
+              break
+            fi
+            echo "Intento $i - esperando 5 segundos..."
+            sleep 5
+          done
+
+      # ── 7. FASE 2 — BDD ───────────────────────────────────
       - name: FASE 2 - Pruebas BDD (Cucumber + Serenity)
         run: ./mvnw test -Dtest=ReservationRunnerTest
 
-      # ── 6. Publicar reporte Serenity ──────────────────────
+      # ── 8. Publicar reporte Serenity ──────────────────────
       - name: Publicar reporte Serenity
         uses: actions/upload-artifact@v4
         if: always()
@@ -75,7 +96,7 @@ jobs:
           name: serenity-report
           path: target/site/serenity/
 
-      # ── 7. Publicar reporte Cucumber ──────────────────────
+      # ── 9. Publicar reporte Cucumber ──────────────────────
       - name: Publicar reporte Cucumber
         uses: actions/upload-artifact@v4
         if: always()
