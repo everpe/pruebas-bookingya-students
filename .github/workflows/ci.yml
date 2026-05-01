@@ -1,4 +1,14 @@
-name: Java CI with Maven
+# ────────────────────────────────────────────────────────────
+# GitHub Actions — CI Pipeline BookingYa
+# ────────────────────────────────────────────────────────────
+# Ejecuta automáticamente:
+# - FASE 1: Pruebas TDD (JUnit 5 + Mockito)
+# - FASE 2: Pruebas BDD (Cucumber + Serenity)
+#
+# Se activa en cada push o pull request a main y estudiantes
+# ────────────────────────────────────────────────────────────
+
+name: BookingYa - TDD y BDD Tests
 
 on:
   push:
@@ -7,16 +17,68 @@ on:
     branches: [ "main", "estudiantes" ]
 
 jobs:
-  build:
+  test:
+    name: Ejecutar pruebas TDD y BDD
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: bookingya
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
+
+      # ── 1. Clonar el repositorio ──────────────────────────
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # ── 2. Configurar Java 17 ─────────────────────────────
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-      - name: Run tests
-        run: mvn -B test --file pom.xml
+
+      # ── 3. Crear archivo .env ─────────────────────────────
+      - name: Crear archivo .env
+        run: |
+          echo "HOST_DB=localhost" >> .env
+          echo "PORT_DB=5432" >> .env
+          echo "POSTGRES_DB=bookingya" >> .env
+          echo "USERNAME_DB=postgres" >> .env
+          echo "PASSWORD_DB=postgres" >> .env
+
+      # ── 4. FASE 1 — TDD ───────────────────────────────────
+      - name: FASE 1 - Pruebas TDD (JUnit 5 + Mockito)
+        run: ./mvnw test -Dtest=ReservationServiceTest
+
+      # ── 5. FASE 2 — BDD ───────────────────────────────────
+      - name: FASE 2 - Pruebas BDD (Cucumber + Serenity)
+        run: ./mvnw test -Dtest=ReservationRunnerTest
+
+      # ── 6. Publicar reporte Serenity ──────────────────────
+      - name: Publicar reporte Serenity
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: serenity-report
+          path: target/site/serenity/
+
+      # ── 7. Publicar reporte Cucumber ──────────────────────
+      - name: Publicar reporte Cucumber
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-report
+          path: target/cucumber-reports/
