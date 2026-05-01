@@ -1,18 +1,17 @@
-// ============================================================
+// ────────────────────────────────────────────────────────────────────
 // BDD - RUNNER DE EJECUCIÓN CON CUCUMBER + SERENITY
-// ------------------------------------------------------------
+// ────────────────────────────────────────────────────────────────────
 // Objetivo:
-// Ejecutar los escenarios definidos en archivos .feature
+// Ejecutar los escenarios definidos en el archivo reservation.feature
 // utilizando Cucumber y generar reportes con Serenity.
 //
 // Enfoque:
 // - Se utiliza Cucumber para definir escenarios en lenguaje Gherkin
 // - Se utiliza Serenity para la ejecución y generación de reportes
-// - Los pasos de Cucumber (glue) invocan el patrón Screenplay
 //
 // Flujo de ejecución:
-// Runner → Feature → StepDefinitions → Screenplay (Actor/Task/Question)
-// ============================================================
+// Runner → Feature → StepDefinitions
+// ────────────────────────────────────────────────────────────────────
 
 package com.project.bookingya.bdd.runners;
 
